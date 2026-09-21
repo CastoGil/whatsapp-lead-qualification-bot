@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { env } from "../config/env.js";
-import { crearMensajeBienvenida } from "../services/conversation.service.js";
+import { procesarMensajeConversacion } from "../services/conversation.service.js";
 import { enviarMensajeTexto } from "../services/whatsapp-api.service.js";
 import { extraerMensajesEntrantes } from "../services/whatsapp.service.js";
 import type {
@@ -36,7 +36,7 @@ async function responderMensajeEntrante(
   });
 
   try {
-    const textoRespuesta = crearMensajeBienvenida(mensaje.nombre);
+    const textoRespuesta = procesarMensajeConversacion(mensaje);
 
     const mensajeSalienteId = await enviarMensajeTexto({
       destinatario: mensaje.telefono,
