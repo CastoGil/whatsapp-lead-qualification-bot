@@ -4,11 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsx watch src/server.ts",
-    "check": "tsc --noEmit",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "check": "tsc --noEmit",
+    "test:whatsapp": "tsx src/scripts/send-test-message.ts"
   },
   "keywords": [],
   "author": "",
