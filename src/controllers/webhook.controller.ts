@@ -36,12 +36,12 @@ async function responderMensajeEntrante(
   });
 
   try {
-    const textoRespuesta = procesarMensajeConversacion(mensaje);
+    const textoRespuesta =
+      await procesarMensajeConversacion(mensaje);
 
     const mensajeSalienteId = await enviarMensajeTexto({
       destinatario: mensaje.telefono,
-      texto: textoRespuesta,
-      phoneNumberId: mensaje.phoneNumberId
+      texto: textoRespuesta
     });
 
     console.log("✅ Respuesta automática enviada:", {

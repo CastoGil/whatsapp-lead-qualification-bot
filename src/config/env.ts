@@ -1,62 +1,53 @@
-import "dotenv/config";
+function obtenerVariableObligatoria(
+  nombre: string,
+  preservarEspacios = false
+): string {
+  const valor = process.env[nombre];
 
-const puerto = Number(
-  process.env.PORT ?? "3000"
-);
+  if (!valor || valor.trim().length === 0) {
+    throw new Error(
+      `Falta la variable de entorno obligatoria: ${nombre}`
+    );
+  }
 
-const tokenVerificacion =
-  process.env.VERIFY_TOKEN?.trim();
+  return preservarEspacios ? valor : valor.trim();
+}
 
-const tokenAccesoWhatsApp =
-  process.env.WHATSAPP_ACCESS_TOKEN?.trim();
+const puerto = Number(process.env.PORT ?? 3000);
 
-const phoneNumberIdWhatsApp =
-  process.env.WHATSAPP_PHONE_NUMBER_ID?.trim();
+if (!Number.isInteger(puerto) || puerto < 1 || puerto > 65535) {
+  throw new Error("PORT debe ser un número válido entre 1 y 65535.");
+}
 
 const versionApiWhatsApp =
-  process.env.WHATSAPP_API_VERSION?.trim() ||
-  "v26.0";
+  process.env.WHATSAPP_API_VERSION?.trim() || "v26.0";
 
-if (
-  !Number.isInteger(puerto) ||
-  puerto < 1 ||
-  puerto > 65535
-) {
+if (!/^v\d+\.\d+$/.test(versionApiWhatsApp)) {
   throw new Error(
-    "La variable PORT debe contener un puerto válido."
+    "WHATSAPP_API_VERSION debe tener un formato como v26.0."
   );
 }
 
-if (!tokenVerificacion) {
-  throw new Error(
-    "La variable VERIFY_TOKEN es obligatoria."
-  );
-}
+const uriMongoDB = obtenerVariableObligatoria("MONGODB_URI");
 
-if (!tokenAccesoWhatsApp) {
-  throw new Error(
-    "La variable WHATSAPP_ACCESS_TOKEN es obligatoria."
-  );
-}
-
-if (!phoneNumberIdWhatsApp) {
-  throw new Error(
-    "La variable WHATSAPP_PHONE_NUMBER_ID es obligatoria."
-  );
-}
-
-if (
-  !/^v\d+\.\d+$/.test(versionApiWhatsApp)
-) {
-  throw new Error(
-    "La variable WHATSAPP_API_VERSION debe tener un formato como v26.0."
-  );
+if (!/^mongodb(\+srv)?:\/\//.test(uriMongoDB)) {
+  throw new Error("MONGODB_URI no tiene un formato válido.");
 }
 
 export const env = Object.freeze({
   puerto,
-  tokenVerificacion,
-  tokenAccesoWhatsApp,
-  phoneNumberIdWhatsApp,
-  versionApiWhatsApp
+  tokenVerificacion:
+    obtenerVariableObligatoria("VERIFY_TOKEN"),
+  tokenAccesoWhatsApp:
+    obtenerVariableObligatoria("WHATSAPP_ACCESS_TOKEN"),
+  phoneNumberIdWhatsApp:
+    obtenerVariableObligatoria("WHATSAPP_PHONE_NUMBER_ID"),
+  versionApiWhatsApp,
+  uriMongoDB,
+  usuarioMongoDB:
+    obtenerVariableObligatoria("MONGODB_USERNAME"),
+  passwordMongoDB:
+    obtenerVariableObligatoria("MONGODB_PASSWORD", true),
+  nombreBaseMongoDB:
+    obtenerVariableObligatoria("MONGODB_DB_NAME")
 });

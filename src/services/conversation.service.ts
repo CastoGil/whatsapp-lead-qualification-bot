@@ -1,8 +1,8 @@
 import {
-  eliminarConversacion,
-  guardarConversacion,
-  obtenerConversacion
-} from "../repositories/conversation.repository.js";
+  eliminarConversacionMongo as eliminarConversacion,
+  guardarConversacionMongo as guardarConversacion,
+  obtenerConversacionMongo as obtenerConversacion
+} from "../repositories/mongo-conversation.repository.js";
 import type {
   Conversacion,
   DatosLead,
@@ -72,11 +72,11 @@ export function crearMensajeBienvenida(nombreCompleto: string): string {
   ].join("\n");
 }
 
-function actualizarConversacion(
+async function actualizarConversacion(
   conversacion: Conversacion,
   estado: EstadoConversacion,
   datos: Partial<DatosLead> = {}
-): Conversacion {
+): Promise<Conversacion> {
   return guardarConversacion({
     ...conversacion,
     estado,
@@ -88,10 +88,12 @@ function actualizarConversacion(
   });
 }
 
-function iniciarConversacion(mensaje: MensajeEntrante): string {
+async function iniciarConversacion(
+  mensaje: MensajeEntrante
+): Promise<string> {
   const ahora = new Date();
 
-  guardarConversacion({
+  await guardarConversacion({
     telefono: mensaje.telefono,
     estado: "esperando_interes",
     datos: {},
@@ -102,16 +104,19 @@ function iniciarConversacion(mensaje: MensajeEntrante): string {
   return crearMensajeBienvenida(mensaje.nombre);
 }
 
-function procesarInteres(
+async function procesarInteres(
   conversacion: Conversacion,
   respuesta: string
-): string {
+): Promise<string> {
   if (
     ["1", "si", "si quiero informacion", "quiero informacion"].includes(
       respuesta
     )
   ) {
-    actualizarConversacion(conversacion, "esperando_nombre");
+    await actualizarConversacion(
+      conversacion,
+      "esperando_nombre"
+    );
 
     return [
       "¡Excelente! Para comenzar necesito algunos datos.",
@@ -121,7 +126,7 @@ function procesarInteres(
   }
 
   if (["2", "no", "no por ahora"].includes(respuesta)) {
-    actualizarConversacion(conversacion, "finalizada");
+    await actualizarConversacion(conversacion, "finalizada");
 
     return [
       "Entendido. Gracias por comunicarte con nosotros.",
@@ -139,25 +144,29 @@ function procesarInteres(
   ].join("\n");
 }
 
-function procesarNombre(
+async function procesarNombre(
   conversacion: Conversacion,
   texto: string
-): string {
+): Promise<string> {
   const nombre = texto.trim().replace(/\s+/g, " ");
 
   if (nombre.length < 2 || nombre.length > 80 || /^\d+$/.test(nombre)) {
     return "Escribe tu nombre y apellido usando texto, por favor.";
   }
 
-  actualizarConversacion(conversacion, "esperando_edad", { nombre });
+  await actualizarConversacion(
+    conversacion,
+    "esperando_edad",
+    { nombre }
+  );
 
   return `Gracias, ${nombre}. ¿Qué edad tienes?`;
 }
 
-function procesarEdad(
+async function procesarEdad(
   conversacion: Conversacion,
   texto: string
-): string {
+): Promise<string> {
   const valor = texto.trim();
 
   if (!/^\d{1,3}$/.test(valor)) {
@@ -170,7 +179,7 @@ function procesarEdad(
     return "Ingresa una edad válida entre 16 y 100 años.";
   }
 
-  actualizarConversacion(
+  await actualizarConversacion(
     conversacion,
     "esperando_situacion_laboral",
     { edad }
@@ -186,10 +195,10 @@ function procesarEdad(
   ].join("\n");
 }
 
-function procesarSituacionLaboral(
+async function procesarSituacionLaboral(
   conversacion: Conversacion,
   respuesta: string
-): string {
+): Promise<string> {
   const situacionLaboral = situacionesLaborales[respuesta];
 
   if (!situacionLaboral) {
@@ -197,7 +206,7 @@ function procesarSituacionLaboral(
   }
 
   if (respuesta === "2") {
-    actualizarConversacion(
+    await actualizarConversacion(
       conversacion,
       "esperando_tiempo_sin_empleo",
       { situacionLaboral }
@@ -213,7 +222,7 @@ function procesarSituacionLaboral(
     ].join("\n");
   }
 
-  actualizarConversacion(conversacion, "esperando_pais", {
+  await actualizarConversacion(conversacion, "esperando_pais", {
     situacionLaboral,
     tiempoSinEmpleo: "No aplica"
   });
@@ -221,36 +230,38 @@ function procesarSituacionLaboral(
   return "¿En qué país deseas buscar oportunidades laborales?";
 }
 
-function procesarTiempoSinEmpleo(
+async function procesarTiempoSinEmpleo(
   conversacion: Conversacion,
   respuesta: string
-): string {
+): Promise<string> {
   const tiempoSinEmpleo = tiemposSinEmpleo[respuesta];
 
   if (!tiempoSinEmpleo) {
     return "Selecciona una opción válida del 1 al 4.";
   }
 
-  actualizarConversacion(conversacion, "esperando_pais", {
+  await actualizarConversacion(conversacion, "esperando_pais", {
     tiempoSinEmpleo
   });
 
   return "¿En qué país deseas buscar oportunidades laborales?";
 }
 
-function procesarPais(
+async function procesarPais(
   conversacion: Conversacion,
   texto: string
-): string {
+): Promise<string> {
   const paisBusqueda = texto.trim().replace(/\s+/g, " ");
 
   if (paisBusqueda.length < 2 || paisBusqueda.length > 80) {
     return "Escribe un país o región válido.";
   }
 
-  actualizarConversacion(conversacion, "esperando_servicio", {
-    paisBusqueda
-  });
+  await actualizarConversacion(
+    conversacion,
+    "esperando_servicio",
+    { paisBusqueda }
+  );
 
   return [
     "¿Qué tipo de ayuda te interesa?",
@@ -262,17 +273,17 @@ function procesarPais(
   ].join("\n");
 }
 
-function procesarServicio(
+async function procesarServicio(
   conversacion: Conversacion,
   respuesta: string
-): string {
+): Promise<string> {
   const servicioInteres = servicios[respuesta];
 
   if (!servicioInteres) {
     return "Selecciona una opción válida del 1 al 4.";
   }
 
-  const conversacionActualizada = actualizarConversacion(
+  const conversacionActualizada = await actualizarConversacion(
     conversacion,
     "derivacion_humana",
     { servicioInteres }
@@ -302,17 +313,17 @@ function procesarServicio(
   ].join("\n");
 }
 
-export function procesarMensajeConversacion(
+export async function procesarMensajeConversacion(
   mensaje: MensajeEntrante
-): string {
+): Promise<string> {
   const textoNormalizado = normalizarTexto(mensaje.texto);
 
   if (["inicio", "menu", "reiniciar"].includes(textoNormalizado)) {
-    eliminarConversacion(mensaje.telefono);
+    await eliminarConversacion(mensaje.telefono);
     return iniciarConversacion(mensaje);
   }
 
-  const conversacion = obtenerConversacion(mensaje.telefono);
+  const conversacion = await obtenerConversacion(mensaje.telefono);
 
   if (!conversacion) {
     return iniciarConversacion(mensaje);
