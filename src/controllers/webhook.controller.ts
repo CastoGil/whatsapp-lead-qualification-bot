@@ -1,91 +1,79 @@
-import type {
-  Request,
-  Response
-} from "express";
-
+import type { Request, Response } from "express";
 import { env } from "../config/env.js";
-
-import {
-  extraerMensajesEntrantes
-} from "../services/whatsapp.service.js";
-
+import { crearMensajeBienvenida } from "../services/conversation.service.js";
+import { enviarMensajeTexto } from "../services/whatsapp-api.service.js";
+import { extraerMensajesEntrantes } from "../services/whatsapp.service.js";
 import type {
+  MensajeEntrante,
   WhatsAppWebhookPayload
 } from "../types/whatsapp.types.js";
 
-export function verificarWebhook(
-  solicitud: Request,
-  respuesta: Response
-): void {
-  const modo = solicitud.query["hub.mode"];
-  const token = solicitud.query["hub.verify_token"];
-  const desafio = solicitud.query["hub.challenge"];
+export function verificarWebhook(req: Request, res: Response): void {
+  const modo = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const desafio = req.query["hub.challenge"];
 
-  const solicitudValida =
-    modo === "subscribe" &&
-    token === env.tokenVerificacion &&
-    typeof desafio === "string";
-
-  if (solicitudValida) {
-    console.log(
-      "✅ Webhook verificado correctamente."
-    );
-
-    respuesta.status(200).send(desafio);
+  if (modo === "subscribe" && token === env.tokenVerificacion) {
+    console.log("✅ Webhook verificado correctamente.");
+    res.status(200).send(desafio);
     return;
   }
 
-  console.warn(
-    "❌ Verificación del webhook rechazada."
-  );
-
-  respuesta.sendStatus(403);
+  console.warn("❌ Falló la verificación del webhook.");
+  res.sendStatus(403);
 }
 
-export function recibirEventoWebhook(
-  solicitud: Request,
-  respuesta: Response
-): void {
-  const evento =
-    solicitud.body as WhatsAppWebhookPayload;
+async function responderMensajeEntrante(
+  mensaje: MensajeEntrante
+): Promise<void> {
+  console.log("📩 Mensaje de WhatsApp procesado:", {
+    id: mensaje.id,
+    telefono: mensaje.telefono,
+    nombre: mensaje.nombre,
+    texto: mensaje.texto,
+    fecha: mensaje.fecha.toISOString(),
+    phoneNumberId: mensaje.phoneNumberId
+  });
 
-  if (
-    evento.object !==
-    "whatsapp_business_account"
-  ) {
-    console.warn(
-      "⚠️ Evento desconocido rechazado."
-    );
+  try {
+    const textoRespuesta = crearMensajeBienvenida(mensaje.nombre);
 
-    respuesta.sendStatus(404);
+    const mensajeSalienteId = await enviarMensajeTexto({
+      destinatario: mensaje.telefono,
+      texto: textoRespuesta,
+      phoneNumberId: mensaje.phoneNumberId
+    });
+
+    console.log("✅ Respuesta automática enviada:", {
+      mensajeEntranteId: mensaje.id,
+      mensajeSalienteId
+    });
+  } catch (error) {
+    const detalle =
+      error instanceof Error ? error.message : "Error desconocido";
+
+    console.error("❌ No se pudo enviar la respuesta automática:", detalle);
+  }
+}
+
+export function recibirEventoWebhook(req: Request, res: Response): void {
+  const payload = req.body as WhatsAppWebhookPayload;
+
+  if (payload.object !== "whatsapp_business_account") {
+    res.sendStatus(404);
     return;
   }
 
-  // Meta necesita recibir rápidamente una respuesta 200.
-  respuesta.sendStatus(200);
+  // Respondemos inmediatamente para que Meta confirme la recepción.
+  res.sendStatus(200);
 
-  const mensajes =
-    extraerMensajesEntrantes(evento);
+  const mensajes = extraerMensajesEntrantes(payload);
 
-  if (mensajes.length === 0) {
-    console.log(
-      "ℹ️ Evento recibido sin mensajes de texto."
-    );
-
-    return;
-  }
+  console.log(
+    `📥 Evento de WhatsApp recibido: ${payload.entry?.length ?? 0} entrada(s).`
+  );
 
   for (const mensaje of mensajes) {
-    console.log(
-      "📩 Mensaje de WhatsApp procesado:",
-      {
-        id: mensaje.id,
-        telefono: mensaje.telefono,
-        nombre: mensaje.nombre,
-        texto: mensaje.texto,
-        fecha: mensaje.fecha.toISOString(),
-        phoneNumberId: mensaje.phoneNumberId
-      }
-    );
+    void responderMensajeEntrante(mensaje);
   }
 }
