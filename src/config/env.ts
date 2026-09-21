@@ -1,6 +1,8 @@
 import "dotenv/config";
 
 const puerto = Number(process.env.PORT ?? "3000");
+const tokenVerificacion =
+  process.env.VERIFY_TOKEN?.trim();
 
 if (
   !Number.isInteger(puerto) ||
@@ -12,6 +14,13 @@ if (
   );
 }
 
+if (!tokenVerificacion) {
+  throw new Error(
+    "La variable VERIFY_TOKEN es obligatoria."
+  );
+}
+
 export const env = Object.freeze({
-  puerto
+  puerto,
+  tokenVerificacion
 });
