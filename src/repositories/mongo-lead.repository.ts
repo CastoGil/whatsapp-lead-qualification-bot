@@ -12,16 +12,18 @@ import type {
 function convertirLead(
   documento: HydratedDocument<NuevoLead>
 ): Lead {
+  const objeto = documento.toObject();
+
   return {
     id: documento._id.toString(),
-    telefono: documento.telefono,
-    datos: { ...documento.datos },
-    estadoGestion: documento.estadoGestion,
+    telefono: objeto.telefono,
+    datos: { ...objeto.datos },
+    estadoGestion: objeto.estadoGestion,
     conversacionCreadaEn:
-      documento.conversacionCreadaEn,
-    creadoEn: documento.creadoEn,
-    actualizadoEn: documento.actualizadoEn,
-    contactadoEn: documento.contactadoEn
+      objeto.conversacionCreadaEn,
+    creadoEn: objeto.creadoEn,
+    actualizadoEn: objeto.actualizadoEn,
+    contactadoEn: objeto.contactadoEn
   };
 }
 
@@ -36,13 +38,15 @@ export async function guardarLeadCalificadoMongo(
       conversacionCreadaEn: conversacion.creadaEn
     },
     {
+      $set: {
+        datos: { ...conversacion.datos },
+        actualizadoEn: ahora
+      },
       $setOnInsert: {
         telefono: conversacion.telefono,
-        datos: { ...conversacion.datos },
         estadoGestion: "pendiente",
         conversacionCreadaEn: conversacion.creadaEn,
-        creadoEn: ahora,
-        actualizadoEn: ahora
+        creadoEn: ahora
       }
     },
     {
