@@ -23,13 +23,22 @@ type RespuestaEnvioWhatsApp = {
     fbtrace_id?: string;
   };
 };
+function normalizarNumeroDestino(numero: string): string {
+  const digitos = numero.replace(/\D/g, "");
+
+  if (digitos.startsWith("549")) {
+    return `54${digitos.slice(3)}`;
+  }
+
+  return digitos;
+}
 
 export async function enviarMensajeTexto({
   destinatario,
   texto,
   phoneNumberId = env.phoneNumberIdWhatsApp
 }: ParametrosMensajeTexto): Promise<string> {
-  const numeroDestino = destinatario.trim();
+  const numeroDestino = normalizarNumeroDestino(destinatario);
   const contenido = texto.trim();
   const numeroEmisorId = phoneNumberId.trim();
 
