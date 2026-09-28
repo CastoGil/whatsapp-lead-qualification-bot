@@ -1,4 +1,4 @@
-import { createTransport } from "nodemailer";
+import { Resend } from "resend";
 import { env } from "../config/env.js";
 import type { Conversacion } from "../types/conversation.types.js";
 import { enviarMensajeTexto } from "./whatsapp-api.service.js";
@@ -66,49 +66,41 @@ async function notificarPorCorreo(
 ): Promise<void> {
   const {
     correoAsesor,
-    hostSmtp,
-    puertoSmtp,
-    smtpSeguro,
-    usuarioSmtp,
-    passwordSmtp,
-    nombreRemitenteSmtp
+    apiKeyResend,
+    remitenteCorreo
   } = env;
 
-  if (
-    !correoAsesor ||
-    !hostSmtp ||
-    !usuarioSmtp ||
-    !passwordSmtp
-  ) {
+  if (!correoAsesor || !apiKeyResend) {
     console.warn(
-      "⚠️ Notificación por correo desactivada: faltan variables SMTP."
+      "⚠️ Notificación por correo desactivada: faltan variables de Resend."
     );
     return;
   }
 
-  const transportador = createTransport({
-    host: hostSmtp,
-    port: puertoSmtp,
-    secure: smtpSeguro,
-    auth: {
-      user: usuarioSmtp,
-      pass: passwordSmtp
-    }
-  });
+  const resend = new Resend(apiKeyResend);
 
-  const resultado = await transportador.sendMail({
-    from: {
-      name: nombreRemitenteSmtp,
-      address: usuarioSmtp
-    },
-    to: correoAsesor,
+  const { data, error } = await resend.emails.send({
+    from: remitenteCorreo,
+    to: [correoAsesor],
     subject: "Nuevo lead calificado desde WhatsApp",
     text: resumen
   });
 
+  if (error) {
+    throw new Error(
+      `Resend rechazó el correo: ${error.message}`
+    );
+  }
+
+  if (!data?.id) {
+    throw new Error(
+      "Resend no devolvió el ID del correo enviado."
+    );
+  }
+
   console.log(
     "✅ Asesor notificado por correo:",
-    resultado.messageId
+    data.id
   );
 }
 
