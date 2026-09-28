@@ -109,9 +109,23 @@ async function procesarInteres(
   respuesta: string
 ): Promise<string> {
   if (
-    ["1", "si", "si quiero informacion", "quiero informacion"].includes(
-      respuesta
-    )
+    [
+      "1",
+      "si",
+      "si quiero informacion",
+      "quiero informacion",
+      "quiero saber mas",
+      "quisiera informacion",
+      "necesito informacion",
+      "me interesa",
+      "estoy interesado",
+      "estoy interesada",
+      "contactar un asesor",
+      "quiero contactar un asesor",
+      "hablar con un asesor",
+      "quiero hablar con un asesor",
+      "necesito asesoramiento"
+    ].includes(respuesta)
   ) {
     await actualizarConversacion(
       conversacion,
@@ -125,7 +139,18 @@ async function procesarInteres(
     ].join("\n");
   }
 
-  if (["2", "no", "no por ahora"].includes(respuesta)) {
+  if (
+    [
+      "2",
+      "no",
+      "no por ahora",
+      "ahora no",
+      "no me interesa",
+      "no gracias",
+      "quizas mas adelante",
+      "mas adelante"
+    ].includes(respuesta)
+  ) {
     await actualizarConversacion(conversacion, "finalizada");
 
     return [
