@@ -10,6 +10,9 @@ import type {
 } from "../types/conversation.types.js";
 import type { MensajeEntrante } from "../types/whatsapp.types.js";
 import { notificarNuevoLead } from "./lead-notification.service.js";
+import {
+  guardarLeadCalificadoMongo
+} from "../repositories/mongo-lead.repository.js";
 
 const situacionesLaborales: Record<string, string> = {
   "1": "Empleado/a buscando un cambio",
@@ -315,6 +318,21 @@ async function procesarServicio(
     { servicioInteres }
   );
 
+  try {
+    await guardarLeadCalificadoMongo(
+      conversacionActualizada
+    );
+  } catch (error) {
+    const detalle =
+      error instanceof Error
+        ? error.message
+        : "Error desconocido";
+
+    console.error(
+      "❌ No se pudo guardar el lead calificado:",
+      detalle
+    );
+  }
   void notificarNuevoLead(conversacionActualizada).catch(
     (error: unknown) => {
       const detalle =
