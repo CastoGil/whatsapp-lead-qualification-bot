@@ -70,7 +70,11 @@ export const env = Object.freeze({
     obtenerVariableOpcional("ADVISOR_EMAIL"),
   apiKeyResend:
   obtenerVariableOpcional("RESEND_API_KEY"),
-remitenteCorreo:
-  obtenerVariableOpcional("RESEND_FROM_EMAIL") ??
-  "Bot Postulaciones <onboarding@resend.dev>"
+  remitenteCorreo:
+    obtenerVariableOpcional("RESEND_FROM_EMAIL") ??
+    "Bot Postulaciones <onboarding@resend.dev>",
+  usuarioAdmin:
+    obtenerVariableOpcional("ADMIN_USERNAME"),
+  passwordAdmin:
+    obtenerVariableOpcional("ADMIN_PASSWORD", true)
 });
