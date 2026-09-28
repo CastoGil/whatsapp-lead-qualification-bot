@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "check": "tsc --noEmit",
-    "test:whatsapp": "tsx src/scripts/send-test-message.ts"
+    "test:whatsapp": "tsx src/scripts/send-test-message.ts",
+    "test:notifications": "tsx src/scripts/test-lead-notification.ts"
   },
   "keywords": [],
   "author": "",
@@ -17,12 +18,14 @@
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.2",
+    "@types/nodemailer": "^8.0.2",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   },
   "dependencies": {
     "dotenv": "^18.0.1",
     "express": "^5.2.1",
-    "mongoose": "^9.10.1"
+    "mongoose": "^9.10.1",
+    "nodemailer": "^10.0.11"
   }
 }

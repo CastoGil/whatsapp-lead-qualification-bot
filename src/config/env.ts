@@ -13,6 +13,19 @@ function obtenerVariableObligatoria(
   return preservarEspacios ? valor : valor.trim();
 }
 
+function obtenerVariableOpcional(
+  nombre: string,
+  preservarEspacios = false
+): string | undefined {
+  const valor = process.env[nombre];
+
+  if (!valor || valor.trim().length === 0) {
+    return undefined;
+  }
+
+  return preservarEspacios ? valor : valor.trim();
+}
+
 const puerto = Number(process.env.PORT ?? 3000);
 
 if (!Number.isInteger(puerto) || puerto < 1 || puerto > 65535) {
@@ -34,6 +47,25 @@ if (!/^mongodb(\+srv)?:\/\//.test(uriMongoDB)) {
   throw new Error("MONGODB_URI no tiene un formato válido.");
 }
 
+const puertoSmtp = Number(process.env.SMTP_PORT ?? 465);
+
+if (
+  !Number.isInteger(puertoSmtp) ||
+  puertoSmtp < 1 ||
+  puertoSmtp > 65535
+) {
+  throw new Error(
+    "SMTP_PORT debe ser un número válido entre 1 y 65535."
+  );
+}
+
+const valorSmtpSeguro =
+  process.env.SMTP_SECURE?.trim().toLowerCase() ?? "true";
+
+if (!["true", "false"].includes(valorSmtpSeguro)) {
+  throw new Error("SMTP_SECURE debe ser true o false.");
+}
+
 export const env = Object.freeze({
   puerto,
   tokenVerificacion:
@@ -49,5 +81,22 @@ export const env = Object.freeze({
   passwordMongoDB:
     obtenerVariableObligatoria("MONGODB_PASSWORD", true),
   nombreBaseMongoDB:
-    obtenerVariableObligatoria("MONGODB_DB_NAME")
+    obtenerVariableObligatoria("MONGODB_DB_NAME"),
+
+  numeroAsesorWhatsApp:
+    obtenerVariableOpcional("WHATSAPP_ADVISOR_NUMBER"),
+  correoAsesor:
+    obtenerVariableOpcional("ADVISOR_EMAIL"),
+  hostSmtp:
+    obtenerVariableOpcional("SMTP_HOST"),
+  puertoSmtp,
+  smtpSeguro:
+    valorSmtpSeguro === "true",
+  usuarioSmtp:
+    obtenerVariableOpcional("SMTP_USER"),
+  passwordSmtp:
+    obtenerVariableOpcional("SMTP_PASSWORD", true),
+  nombreRemitenteSmtp:
+    obtenerVariableOpcional("SMTP_FROM_NAME") ??
+    "Bot Postulaciones"
 });

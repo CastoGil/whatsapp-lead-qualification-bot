@@ -9,6 +9,7 @@ import type {
   EstadoConversacion
 } from "../types/conversation.types.js";
 import type { MensajeEntrante } from "../types/whatsapp.types.js";
+import { notificarNuevoLead } from "./lead-notification.service.js";
 
 const situacionesLaborales: Record<string, string> = {
   "1": "Empleado/a buscando un cambio",
@@ -312,6 +313,20 @@ async function procesarServicio(
     conversacion,
     "derivacion_humana",
     { servicioInteres }
+  );
+
+  void notificarNuevoLead(conversacionActualizada).catch(
+    (error: unknown) => {
+      const detalle =
+        error instanceof Error
+          ? error.message
+          : "Error desconocido";
+
+      console.error(
+        "❌ Error inesperado al notificar al asesor:",
+        detalle
+      );
+    }
   );
 
   const datos = conversacionActualizada.datos;
