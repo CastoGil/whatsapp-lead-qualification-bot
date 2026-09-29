@@ -1,5 +1,8 @@
 import express from "express";
 import {
+  adminApiRouter
+} from "./routes/admin-api.routes.js";
+import {
   adminRouter
 } from "./routes/admin.routes.js";
 import {
@@ -23,4 +26,5 @@ app.use(
 
 app.use(healthRouter);
 app.use("/webhook", webhookRouter);
+app.use("/api/admin", adminApiRouter);
 app.use("/admin", adminRouter);

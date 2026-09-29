@@ -5,11 +5,15 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
+    "build": "npm run build:client && npm run build:server",
     "start": "node dist/server.js",
     "check": "tsc --noEmit",
     "test:whatsapp": "tsx src/scripts/send-test-message.ts",
-    "test:notifications": "tsx src/scripts/test-lead-notification.ts"
+    "test:notifications": "tsx src/scripts/test-lead-notification.ts",
+    "dev:client": "npm --prefix client run dev",
+    "build:client": "npm --prefix client run build",
+    "build:server": "tsc",
+    "postinstall": "npm --prefix client ci --include=dev"
   },
   "keywords": [],
   "author": "",
