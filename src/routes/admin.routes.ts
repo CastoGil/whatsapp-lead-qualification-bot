@@ -6,9 +6,7 @@ import express, {
   type Request,
   type Response
 } from "express";
-import {
-  requerirAdministrador
-} from "../middleware/admin-auth.middleware.js";
+
 
 const directorioActual = path.dirname(
   fileURLToPath(import.meta.url)
@@ -87,7 +85,7 @@ function enviarPanel(
 
 export const adminRouter = Router();
 
-adminRouter.use(requerirAdministrador);
+
 adminRouter.use(aplicarSeguridadPanel);
 
 adminRouter.use(

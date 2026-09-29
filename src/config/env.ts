@@ -46,6 +46,21 @@ const uriMongoDB = obtenerVariableObligatoria("MONGODB_URI");
 if (!/^mongodb(\+srv)?:\/\//.test(uriMongoDB)) {
   throw new Error("MONGODB_URI no tiene un formato válido.");
 }
+const secretoSesionAdmin =
+  obtenerVariableObligatoria(
+    "ADMIN_SESSION_SECRET"
+  );
+
+if (
+  Buffer.byteLength(
+    secretoSesionAdmin,
+    "utf8"
+  ) < 32
+) {
+  throw new Error(
+    "ADMIN_SESSION_SECRET debe tener al menos 32 caracteres."
+  );
+}
 
 export const env = Object.freeze({
   puerto,
@@ -69,12 +84,16 @@ export const env = Object.freeze({
   correoAsesor:
     obtenerVariableOpcional("ADVISOR_EMAIL"),
   apiKeyResend:
-  obtenerVariableOpcional("RESEND_API_KEY"),
+    obtenerVariableOpcional("RESEND_API_KEY"),
   remitenteCorreo:
     obtenerVariableOpcional("RESEND_FROM_EMAIL") ??
     "Bot Postulaciones <onboarding@resend.dev>",
   usuarioAdmin:
-    obtenerVariableOpcional("ADMIN_USERNAME"),
+    obtenerVariableObligatoria("ADMIN_USERNAME"),
   passwordAdmin:
-    obtenerVariableOpcional("ADMIN_PASSWORD", true)
+    obtenerVariableObligatoria(
+      "ADMIN_PASSWORD",
+      true
+    ),
+  secretoSesionAdmin
 });

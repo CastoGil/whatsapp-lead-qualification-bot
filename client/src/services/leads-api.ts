@@ -1,3 +1,7 @@
+import {
+  notificarSesionAdminExpirada
+} from "./auth-api";
+
 import type {
   EstadoGestionLead,
   FiltrosLeads,
@@ -17,11 +21,15 @@ async function procesarRespuesta<T>(
     .catch(() => null) as (T & ErrorApi) | null;
 
   if (!respuesta.ok) {
-    throw new Error(
-      datos?.error ??
-        `La solicitud falló con estado ${respuesta.status}.`
-    );
+  if (respuesta.status === 401) {
+    notificarSesionAdminExpirada();
   }
+
+  throw new Error(
+    datos?.error ??
+      `La solicitud falló con estado ${respuesta.status}.`
+  );
+}
 
   if (!datos) {
     throw new Error(
